@@ -64,7 +64,7 @@ jobs:
       with:
         points: ${{ steps.autograder.outputs.points }}
         path: '.github/badges/points-bar.svg'
-        label: 'Баллы'
+        label: 'Points'
       if: success() || failure()
     - name: Commit changes to points bar
       run: |
