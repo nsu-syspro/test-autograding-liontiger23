@@ -44,7 +44,7 @@ jobs:
         max-score: 5
     - name: Autograding Reporter
       id: autograder
-      uses: liontiger23/autograding-grading-reporter@points-bar-integration
+      uses: liontiger23/autograding-grading-reporter@v1
       env:
         HELLO-WORLD-TEST_RESULTS: "${{steps.hello-world-test.outputs.result}}"
         HELLO-WORLD-TEST-2_RESULTS: "${{steps.hello-world-test-2.outputs.result}}"
