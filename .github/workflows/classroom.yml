@@ -1,0 +1,75 @@
+name: Autograding Tests
+'on':
+  push:
+  - 'main'
+  workflow_dispatch:
+  repository_dispatch:
+permissions:
+  checks: write
+  actions: read
+  contents: write
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Hello world test
+      id: hello-world-test
+      uses: classroom-resources/autograding-io-grader@v1
+      with:
+        test-name: Hello world test
+        setup-command: ''
+        command: bash hello.sh
+        input: ''
+        expected-output: Hello World!
+        comparison-method: exact
+        timeout: 1
+        max-score: 5
+    - name: Hello world test 2
+      id: hello-world-test-2
+      uses: classroom-resources/autograding-io-grader@v1
+      with:
+        test-name: Hello world test 2
+        setup-command: ''
+        command: bash hello2.sh
+        input: ''
+        expected-output: Hello World!
+        comparison-method: exact
+        timeout: 1
+        max-score: 5
+    - name: Autograding Reporter
+      id: autograder
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        HELLO-WORLD-TEST_RESULTS: "${{steps.hello-world-test.outputs.result}}"
+        HELLO-WORLD-TEST-2_RESULTS: "${{steps.hello-world-test-2.outputs.result}}"
+      with:
+        runners: hello-world-test,hello-world-test-2
+        
+    ############################
+    # Generate points bar badge
+    #
+    # Note: will run even if autograding failed
+    # thanks to `if: success() || failure()`.
+    #
+    - run: git checkout badges || git checkout -b badges
+      if: success() || failure()
+    - name: points bar
+      uses: markpatterson27/points-bar@v1
+      with:
+        points: ${{ steps.autograder.outputs.points }}
+        path: '.github/badges/points-bar.svg'
+        label: 'Баллы'
+      if: success() || failure()
+    - name: Commit changes to points bar
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add '.github/badges/points-bar.svg'
+        git commit -m "Add/Update points bar" || exit 0
+        git push origin badges
+      if: success() || failure()
