@@ -57,7 +57,7 @@ jobs:
         setup-command: '' # (Optional) Run before the test is run.
         command: bash test.sh
         timeout: 1 # The amount of minutes the test is allowed to run before it is killed. Maximum 60 minutes.
-        # max-score: 10 # (Optional) The amount of points awarded if the test passes.
+        max-score: 10 # (Optional) The amount of points awarded if the test passes.
 
     #############################
     # Python test
@@ -76,7 +76,7 @@ jobs:
       with:
         setup-command: '' # (Optional) Run before the test is run.
         timeout: 1 # The amount of minutes the test is allowed to run before it is killed. Maximum 60 minutes.
-        max-score: 10 # (Optional) The amount of points awarded if the test passes.
+          # max-score: 10 # (Optional) The amount of points awarded if the test passes.
 
     #############################
     # Autograding reporter
