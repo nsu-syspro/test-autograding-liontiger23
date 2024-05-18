@@ -8,16 +8,18 @@ name: Autograding Tests
 permissions:
   checks: write
   actions: read
-  contents: write
+  contents: read
 jobs:
   run-autograding-tests:
     runs-on: ubuntu-latest
     if: github.actor != 'github-classroom[bot]'
+    outputs:
+      points: ${{ steps.autograder.outputs.points }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+        #  with:
+        #    fetch-depth: 0
     - name: Hello world test
       id: hello-world-test
       uses: classroom-resources/autograding-io-grader@v1
@@ -57,20 +59,33 @@ jobs:
     # Note: will run even if autograding failed
     # thanks to `if: success() || failure()`.
     #
-    - run: git checkout badges || git checkout -b badges
-      if: success() || failure()
-    - name: points bar
-      uses: markpatterson27/points-bar@v1
-      with:
-        points: ${{ steps.autograder.outputs.points }}
-        path: '.github/badges/points-bar.svg'
-        label: 'Points'
-      if: success() || failure()
-    - name: Commit changes to points bar
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add '.github/badges/points-bar.svg'
-        git commit -m "Add/Update points bar" || exit 0
-        git push origin badges
-      if: success() || failure()
+    #- run: git checkout badges || git checkout -b badges
+    #  if: success() || failure()
+    #- name: points bar
+    #  uses: markpatterson27/points-bar@v1
+    #  with:
+    #    points: ${{ steps.autograder.outputs.points }}
+    #    path: '.github/badges/points-bar.svg'
+    #    label: 'Points'
+    #  if: success() || failure()
+    #- name: Commit changes to points bar
+    #  run: |
+    #    git config --local user.email "action@github.com"
+    #    git config --local user.name "GitHub Action"
+    #    git add '.github/badges/points-bar.svg'
+    #    git commit -m "Add/Update points bar" || exit 0
+    #    git push origin badges
+    #  if: success() || failure()
+
+  update-points-bar:
+    needs: run-autograding-tests
+    uses: markpatterson27/points-bar/.github/workflows/reusable-workflow.yml@main
+    permissions:
+      contents: write
+    with:
+      points: ${{ needs.run-autograding-tests.outputs.points }}
+      path: '.github/badges/points-bar.svg'
+      label: 'Баллы'
+      branch: badges
+    secrets:
+      token: ${{ secrets.GITHUB_TOKEN }}
