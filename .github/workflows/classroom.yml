@@ -49,15 +49,15 @@ jobs:
     #
     # IMPORTANT: add this test to autograder below!
     #
-    - name: Custom command test
-      id: custom-command-test
+    - name: 'Custom command test #32'
+      id: custom-command-test-32
       uses: classroom-resources/autograding-command-grader@v1
       with:
-        test-name: Custom command test
+        test-name: 'Custom command test #32'
         setup-command: '' # (Optional) Run before the test is run.
         command: bash test.sh
         timeout: 1 # The amount of minutes the test is allowed to run before it is killed. Maximum 60 minutes.
-        max-score: 10 # (Optional) The amount of points awarded if the test passes.
+        # max-score: 10 # (Optional) The amount of points awarded if the test passes.
 
     #############################
     # Python test
@@ -76,7 +76,7 @@ jobs:
       with:
         setup-command: '' # (Optional) Run before the test is run.
         timeout: 1 # The amount of minutes the test is allowed to run before it is killed. Maximum 60 minutes.
-          # max-score: 10 # (Optional) The amount of points awarded if the test passes.
+        # max-score: 10 # (Optional) The amount of points awarded if the test passes.
 
     #############################
     # Autograding reporter
@@ -88,10 +88,10 @@ jobs:
       uses: liontiger23/autograding-grading-reporter@v1
       env:
         INPUT-OUTPUT-TEST_RESULTS: "${{steps.input-output-test.outputs.result}}"
-        CUSTOM-COMMAND-TEST_RESULTS: "${{steps.custom-command-test.outputs.result}}"
+        CUSTOM-COMMAND-TEST-32_RESULTS: "${{steps.custom-command-test-32.outputs.result}}"
         PYTHON-TEST_RESULTS: "${{steps.python-test.outputs.result}}"
       with:
-        runners: input-output-test,custom-command-test,python-test
+        runners: input-output-test,custom-command-test-32,python-test
         
   ############################
   # Generate points bar badge
