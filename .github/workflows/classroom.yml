@@ -79,6 +79,7 @@ jobs:
 
   update-points-bar:
     needs: run-autograding-tests
+    if: success() || failure()
     uses: markpatterson27/points-bar/.github/workflows/reusable-workflow.yml@main
     permissions:
       contents: write
