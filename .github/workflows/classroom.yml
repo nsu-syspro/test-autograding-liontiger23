@@ -40,7 +40,7 @@ jobs:
         expected-output: Hello World!
         comparison-method: exact # Variants: exact, included, regex
         timeout: 1 # The amount of minutes the test is allowed to run before it is killed. Maximum 60 minutes.
-        # max-score: 10 # (Optional) The amount of points awarded if the test passes.
+        max-score: 10 # (Optional) The amount of points awarded if the test passes.
 
     #############################
     # Custom command test
