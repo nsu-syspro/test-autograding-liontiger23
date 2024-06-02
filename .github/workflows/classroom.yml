@@ -1,6 +1,8 @@
 name: Autograding Tests
 'on':
   push:
+    # Only run on main branch to avoid triggering infinitely,
+    # when points bar branch is updated (see update-points-bar job below)
     branches:
     - 'main'
   workflow_dispatch:
@@ -8,69 +10,112 @@ name: Autograding Tests
 permissions:
   checks: write
   actions: read
-  contents: write
+  contents: read
 jobs:
   run-autograding-tests:
     runs-on: ubuntu-latest
     if: github.actor != 'github-classroom[bot]'
+    outputs:
+      # Setup outputs for update-points-bar job below
+      points: ${{ steps.autograder.outputs.points }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    - name: Hello world test
-      id: hello-world-test
+
+    #############################
+    # Input-output test
+    #
+    #   https://github.com/classroom-resources/autograding-io-grader
+    #
+    # IMPORTANT: add this test to autograder below!
+    #
+    - name: Input-output test
+      id: input-output-test
       uses: classroom-resources/autograding-io-grader@v1
       with:
-        test-name: Hello world test
-        setup-command: ''
+        test-name: Input-output test
+        setup-command: '' # (Optional) Run before the test is run.
         command: bash hello.sh
         input: ''
         expected-output: Hello World!
-        comparison-method: exact
-        timeout: 1
-        max-score: 5
-    - name: Hello world test 2
-      id: hello-world-test-2
-      uses: classroom-resources/autograding-io-grader@v1
+        comparison-method: exact # Variants: exact, included, regex
+        timeout: 1 # The amount of minutes the test is allowed to run before it is killed. Maximum 60 minutes.
+        # max-score: 10 # (Optional) The amount of points awarded if the test passes.
+
+    #############################
+    # Custom command test
+    #
+    #   https://github.com/classroom-resources/autograding-command-grader
+    #
+    # IMPORTANT: add this test to autograder below!
+    #
+    - name: 'Custom command test #32'
+      id: custom-command-test-32
+      uses: classroom-resources/autograding-command-grader@v1
       with:
-        test-name: Hello world test 2
-        setup-command: ''
-        command: bash hello2.sh
-        input: ''
-        expected-output: Hello World!
-        comparison-method: exact
-        timeout: 1
-        max-score: 5
+        test-name: 'Custom command test #32'
+        setup-command: '' # (Optional) Run before the test is run.
+        command: bash test.sh
+        timeout: 1 # The amount of minutes the test is allowed to run before it is killed. Maximum 60 minutes.
+        # max-score: 10 # (Optional) The amount of points awarded if the test passes.
+
+    #############################
+    # Python test
+    #
+    #   https://github.com/classroom-resources/autograding-python-grader
+    # 
+    # The new python test runner uses pytest by default,
+    # if you'd like to use a different testing framework,
+    # please create a "Custom command test" above.
+    #
+    # IMPORTANT: add this test to autograder below!
+    #
+    - name: Python test
+      id: python-test
+      uses: classroom-resources/autograding-python-grader@v1
+      with:
+        setup-command: '' # (Optional) Run before the test is run.
+        timeout: 1 # The amount of minutes the test is allowed to run before it is killed. Maximum 60 minutes.
+        # max-score: 10 # (Optional) The amount of points awarded if the test passes.
+
+    #############################
+    # Autograding reporter
+    #
+    # IMPORTANT: update env variables and runners below to use actual tests defined above!
+    #
     - name: Autograding Reporter
       id: autograder
       uses: liontiger23/autograding-grading-reporter@v1
       env:
-        HELLO-WORLD-TEST_RESULTS: "${{steps.hello-world-test.outputs.result}}"
-        HELLO-WORLD-TEST-2_RESULTS: "${{steps.hello-world-test-2.outputs.result}}"
+        INPUT-OUTPUT-TEST_RESULTS: "${{steps.input-output-test.outputs.result}}"
+        CUSTOM-COMMAND-TEST-32_RESULTS: "${{steps.custom-command-test-32.outputs.result}}"
+        PYTHON-TEST_RESULTS: "${{steps.python-test.outputs.result}}"
       with:
-        runners: hello-world-test,hello-world-test-2
+        runners: input-output-test,custom-command-test-32,python-test
         
-    ############################
-    # Generate points bar badge
-    #
-    # Note: will run even if autograding failed
-    # thanks to `if: success() || failure()`.
-    #
-    - run: git checkout badges || git checkout -b badges
-      if: success() || failure()
-    - name: points bar
-      uses: markpatterson27/points-bar@v1
-      with:
-        points: ${{ steps.autograder.outputs.points }}
-        path: '.github/badges/points-bar.svg'
-        label: 'Баллы'
-      if: success() || failure()
-    - name: Commit changes to points bar
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add '.github/badges/points-bar.svg'
-        git commit -m "Add/Update points bar" || exit 0
-        git push origin badges
-      if: success() || failure()
+  ############################
+  # Generate points bar badge
+  #
+  # Add badge to README.md with
+  # 
+  #   ![Points](../../blob/badges/.github/badges/points-bar.svg)
+  #
+  # or if you want to float it to the right:
+  #
+  #   <img alt="Points" align="right" height="36" src="../../blob/badges/.github/badges/points-bar.svg" />
+  #
+  # Note: will run even if autograding failed thanks to `if: success() || failure()`.
+  #
+  update-points-bar:
+    needs: run-autograding-tests
+    if: ${{ (success() || failure()) && needs.run-autograding-tests.outputs.points }}
+    uses: markpatterson27/points-bar/.github/workflows/reusable-workflow.yml@main
+    permissions:
+      contents: write
+    with:
+      points: ${{ needs.run-autograding-tests.outputs.points }}
+      path: '.github/badges/points-bar.svg'
+      label: 'Баллы'
+      branch: badges
+    secrets:
+      token: ${{ secrets.GITHUB_TOKEN }}
